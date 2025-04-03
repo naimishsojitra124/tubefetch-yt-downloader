@@ -1,3 +1,5 @@
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
 export const downloadVideoAction = (() => {
   let timeoutId: NodeJS.Timeout | null = null; // Debounce timer
 
@@ -18,7 +20,7 @@ export const downloadVideoAction = (() => {
         }
 
         // Construct the API route securely
-        const downloadUrl = `/api/download-video?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}`;
+        const downloadUrl = `${BASE_URL}/api/download-video?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}`;
 
         // Use a single reusable anchor element
         const a = document.createElement('a');
