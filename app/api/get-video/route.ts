@@ -1,20 +1,20 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { spawn } from 'child_process';
 
-// Helper function to validate YouTube URLs (prevents SSRF attacks)
+// Helper function to validate YouTube URLs
 const isValidYouTubeUrl = (url: string): boolean => {
   const youtubeRegex =
     /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)[a-zA-Z0-9_-]{11}/;
   return youtubeRegex.test(url);
 };
 
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const url = searchParams.get('url');
 
-    // Validate input
-    if (!url || typeof url !== 'string' || !isValidYouTubeUrl(url)) {
+    // Validate URL
+    if (!url || !isValidYouTubeUrl(url)) {
       return NextResponse.json(
         { error: 'Invalid or missing YouTube URL' },
         { status: 400 }
@@ -39,25 +39,23 @@ export async function POST(request: NextRequest) {
       process.on('close', (code) => {
         if (code !== 0) {
           console.error('yt-dlp error:', errorString.trim());
-          resolve(
+          return resolve(
             NextResponse.json(
               { error: 'Failed to fetch video info' },
               { status: 500 }
             )
           );
-          return;
         }
 
         try {
           const videoData = JSON.parse(dataString);
           if (!videoData || !videoData.title) {
-            resolve(
+            return resolve(
               NextResponse.json(
                 { error: 'Invalid response from yt-dlp' },
                 { status: 500 }
               )
             );
-            return;
           }
 
           const videoDetails = {
@@ -84,19 +82,10 @@ export async function POST(request: NextRequest) {
               ),
           };
 
-          resolve(
-            NextResponse.json(videoDetails, {
-              status: 200,
-              headers: new Headers({
-                'Content-Type': 'application/json',
-                'Cache-Control': 'no-store',
-                'Content-Security-Policy': "default-src 'self'",
-              }),
-            })
-          );
+          return resolve(NextResponse.json(videoDetails, { status: 200 }));
         } catch (error) {
           console.error('Parsing error:', error);
-          resolve(
+          return resolve(
             NextResponse.json(
               { error: 'Error parsing video info' },
               { status: 500 }
@@ -104,7 +93,7 @@ export async function POST(request: NextRequest) {
           );
         }
       });
-    }) as Promise<NextResponse>; // Explicitly define the return type
+    });
   } catch (error) {
     console.error('Unexpected error:', error);
     return NextResponse.json(

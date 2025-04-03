@@ -22,8 +22,8 @@ export const getvideoAction = async (values: z.infer<typeof FormSchema>) => {
     }
 
     // Send secure request to backend
-    const response = await axios.post(`${BASE_URL}/api/get-video?url=${url}`, {
-      timeout: 10000, // Prevent infinite waits
+    const response = await axios.get(`${BASE_URL}/api/get-video`, {
+      params: { url }, // Send URL as a query parameter
       responseType: 'json', // Expect JSON response
       headers: { 'Content-Type': 'application/json' },
     });
